@@ -277,6 +277,7 @@ class KodiDevice(MediaPlayerDevice):
 
         self._turn_on_action = turn_on_action
         self._turn_off_action = turn_off_action
+        self._flag_switch_off = False
         self._enable_websocket = websocket
         self._players = list()
         self._properties = {}
@@ -319,6 +320,7 @@ class KodiDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_on_quit(self):
         """Reset the player state on quit action."""
+        self._flag_switch_off = True
         self._players = None
         self._properties = {}
         self._item = {}
@@ -343,8 +345,12 @@ class KodiDevice(MediaPlayerDevice):
         if self._players is None:
             return STATE_OFF
 
-        if not self._players:
+        if not self._players and self._flag_switch_off:
+            return STATE_OFF
+        elif not self._players:
             return STATE_IDLE
+
+        self._flag_switch_off = False
 
         if self._properties['speed'] == 0 and not self._properties['live']:
             return STATE_PAUSED
@@ -576,6 +582,7 @@ class KodiDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_turn_on(self):
         """Execute turn_on_action to turn on media player."""
+        self._flag_switch_off = False
         if self._turn_on_action is not None:
             yield from self._turn_on_action.async_run()
             yield from self.async_update_ha_state(force_refresh=True)
