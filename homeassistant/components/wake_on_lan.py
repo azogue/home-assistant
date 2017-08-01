@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import CONF_MAC
 import homeassistant.helpers.config_validation as cv
+from homeassistant.loader import bind_hass
 
 REQUIREMENTS = ['wakeonlan==0.2.2']
 
@@ -28,6 +29,15 @@ WAKE_ON_LAN_SEND_MAGIC_PACKET_SCHEMA = vol.Schema({
     vol.Required(CONF_MAC): cv.string,
     vol.Optional(CONF_BROADCAST_ADDRESS): cv.string,
 })
+
+
+@bind_hass
+def send_magic_packet(hass, mac, broadcast_address=None):
+    """Send magic packet to wake up a device."""
+    data = {CONF_MAC: mac}
+    if broadcast_address is not None:
+        data[CONF_BROADCAST_ADDRESS] = broadcast_address
+    hass.services.call(DOMAIN, SERVICE_SEND_MAGIC_PACKET, data)
 
 
 @asyncio.coroutine

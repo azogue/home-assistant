@@ -13,12 +13,13 @@ from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
     SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_TURN_ON)
+from homeassistant.components.wake_on_lan import send_magic_packet
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_PORT,
     CONF_MAC)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['samsungctl==0.6.0', 'wakeonlan==0.2.2']
+REQUIREMENTS = ['samsungctl==0.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Optional(CONF_MAC): cv.string,
 })
 
 
@@ -87,13 +89,11 @@ class SamsungTVDevice(MediaPlayerDevice):
         """Initialize the Samsung device."""
         from samsungctl import exceptions
         from samsungctl import Remote
-        from wakeonlan import wol
         # Save a reference to the imported classes
         self._exceptions_class = exceptions
         self._remote_class = Remote
         self._name = name
         self._mac = mac
-        self._wol = wol
         # Assume that the TV is not muted
         self._muted = False
         # Assume that the TV is in Play mode
@@ -165,7 +165,7 @@ class SamsungTVDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        if self._mac:
+        if self._mac is not None:
             return SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON
         return SUPPORT_SAMSUNGTV
 
@@ -217,7 +217,7 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def turn_on(self):
         """Turn the media player on."""
-        if self._mac:
-            self._wol.send_magic_packet(self._mac)
+        if self._mac is not None:
+            send_magic_packet(self.hass, self._mac)
         else:
             self.send_key('KEY_POWERON')

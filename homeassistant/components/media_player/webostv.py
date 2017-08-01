@@ -18,6 +18,7 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
     SUPPORT_SELECT_SOURCE, SUPPORT_PLAY_MEDIA, MEDIA_TYPE_CHANNEL,
     MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.wake_on_lan import send_magic_packet
 from homeassistant.const import (
     CONF_HOST, CONF_MAC, CONF_CUSTOMIZE, STATE_OFF,
     STATE_PLAYING, STATE_PAUSED,
@@ -25,9 +26,7 @@ from homeassistant.const import (
 from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pylgtv==0.1.7',
-                'websockets==3.2',
-                'wakeonlan==0.2.2']
+REQUIREMENTS = ['pylgtv==0.1.7', 'websockets==3.2']
 
 _CONFIGURING = {}  # type: Dict[str, str]
 _LOGGER = logging.getLogger(__name__)
@@ -150,9 +149,7 @@ class LgWebOSDevice(MediaPlayerDevice):
     def __init__(self, host, mac, name, customize, config):
         """Initialize the webos device."""
         from pylgtv import WebOsClient
-        from wakeonlan import wol
         self._client = WebOsClient(host, config)
-        self._wol = wol
         self._mac = mac
         self._customize = customize
 
@@ -271,7 +268,7 @@ class LgWebOSDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        if self._mac:
+        if self._mac is not None:
             return SUPPORT_WEBOSTV | SUPPORT_TURN_ON
         return SUPPORT_WEBOSTV
 
@@ -287,8 +284,8 @@ class LgWebOSDevice(MediaPlayerDevice):
 
     def turn_on(self):
         """Turn on the media player."""
-        if self._mac:
-            self._wol.send_magic_packet(self._mac)
+        if self._mac is not None:
+            send_magic_packet(self.hass, self._mac)
 
     def volume_up(self):
         """Volume up the media player."""

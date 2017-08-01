@@ -10,12 +10,11 @@ import subprocess as sp
 
 import voluptuous as vol
 
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.wake_on_lan import send_magic_packet
+from homeassistant.const import (CONF_HOST, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
-from homeassistant.const import (CONF_HOST, CONF_NAME)
-
-REQUIREMENTS = ['wakeonlan==0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +52,6 @@ class WOLSwitch(SwitchDevice):
     def __init__(self, hass, name, host, mac_address,
                  off_action, broadcast_address):
         """Initialize the WOL switch."""
-        from wakeonlan import wol
         self._hass = hass
         self._name = name
         self._host = host
@@ -61,7 +59,6 @@ class WOLSwitch(SwitchDevice):
         self._broadcast_address = broadcast_address
         self._off_script = Script(hass, off_action) if off_action else None
         self._state = False
-        self._wol = wol
         self.update()
 
     @property
@@ -81,11 +78,8 @@ class WOLSwitch(SwitchDevice):
 
     def turn_on(self):
         """Turn the device on."""
-        if self._broadcast_address:
-            self._wol.send_magic_packet(
-                self._mac_address, ip_address=self._broadcast_address)
-        else:
-            self._wol.send_magic_packet(self._mac_address)
+        send_magic_packet(self.hass, self._mac_address,
+                          broadcast_address=self._broadcast_address)
 
     def turn_off(self):
         """Turn the device off if an off action is present."""
