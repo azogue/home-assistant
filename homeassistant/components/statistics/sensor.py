@@ -286,7 +286,8 @@ class StatisticsSensor(Entity):
                 "%s: scheduling update at %s", self.entity_id, next_to_purge_timestamp
             )
             if self._update_listener:
-                self._update_listener()
+                if not hasattr(self._update_listener, "run"):
+                    self._update_listener()
                 self._update_listener = None
 
             @callback
