@@ -93,6 +93,10 @@ class HueBridge:
             )
         )
         hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(self.config_entry, "remote")
+        )
+
+        hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(self.config_entry, "sensor")
         )
 
@@ -167,6 +171,9 @@ class HueBridge:
             ),
             self.hass.config_entries.async_forward_entry_unload(
                 self.config_entry, "binary_sensor"
+            ),
+            self.hass.config_entries.async_forward_entry_unload(
+                self.config_entry, "remote"
             ),
             self.hass.config_entries.async_forward_entry_unload(
                 self.config_entry, "sensor"
