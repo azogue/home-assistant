@@ -31,7 +31,7 @@ class SensorManager:
     Intended to be a singleton.
     """
 
-    SCAN_INTERVAL = timedelta(seconds=5)
+    SCAN_INTERVAL = timedelta(seconds=2)
 
     def __init__(self, bridge):
         """Initialize the sensor manager."""
