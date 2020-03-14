@@ -27,5 +27,17 @@
             }
         },
         "title": "Philips Hue"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "add_hue_remotes": "Include Hue switches",
+                    "add_hue_sensors": "Include Hue sensors"
+                },
+                "description": "Select Hue accessories to setup in HomeAssistant",
+                "title": "Hue accessory settings"
+            }
+        }
     }
 }
