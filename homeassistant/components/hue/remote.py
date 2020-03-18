@@ -30,6 +30,7 @@ from aiohue.sensors import (
 from homeassistant.components.remote import RemoteDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
+import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN as HUE_DOMAIN
 from .sensor_base import SENSOR_CONFIG_MAP, GenericHueSensor
@@ -130,16 +131,22 @@ class HueGenericRemote(GenericHueSensor, RemoteDevice):
         """Icon to use in the frontend, if any."""
         return REMOTE_ICONS.get(self.sensor.modelid[0:3])
 
-    @property
-    def force_update(self):
-        """Force update."""
-        return True
-
     def turn_on(self, **kwargs):
         """Do nothing."""
 
     def turn_off(self, **kwargs):
         """Do nothing."""
+
+    def _parsed_sensor_last_updated(self):
+        """
+        Localize the 'lastupdated' timestamp attribute from sensor data.
+
+        Adding the bridge timestamp to state attributes ensures that at least
+        the last remote press is processed as a state change.
+        """
+        return dt_util.parse_datetime(self.sensor.lastupdated).astimezone(
+            self.hass.config.time_zone
+        )
 
     @property
     def device_state_attributes(self):
@@ -147,7 +154,7 @@ class HueGenericRemote(GenericHueSensor, RemoteDevice):
         attributes = {
             "model": self.sensor.type,
             "last_button_event": self.state or "No data",
-            "last_updated": self.sensor.lastupdated.split("T"),
+            "last_updated": self._parsed_sensor_last_updated(),
         }
         if hasattr(self.sensor, "battery"):
             attributes.update(
@@ -216,7 +223,7 @@ class HueRemoteZLLRelativeRotary(HueGenericRemote):
             "dial_state": self.state or "No data",
             "dial_position": self.sensor.state["expectedrotation"],
             "last_button_event": self.state or "No data",
-            "last_updated": self.sensor.state["lastupdated"].split("T"),
+            "last_updated": self._parsed_sensor_last_updated(),
             "name": self.sensor.name,
             "on": self.sensor.raw["config"]["on"],
             "reachable": self.sensor.raw["config"]["reachable"],
