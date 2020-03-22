@@ -45,7 +45,7 @@ _IMPLEMENTED_REMOTE_TYPES = (TYPE_ZGP_SWITCH, TYPE_ZLL_SWITCH, TYPE_ZLL_ROTARY)
 # Scan interval for remotes and binary sensors is set to < 1s
 # just to ~ensure that an update is called for each HA tick,
 # as using an exact 1s misses some of the ticks
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=0.5)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=1)
 
 REMOTE_ICONS = {
     "RWL": "mdi:remote",
@@ -110,7 +110,7 @@ async def async_setup_entry(hass, config_entry: ConfigEntry, async_add_entities)
 
     @callback
     def _async_add_entities(new_entities):
-        """Add remote entitites to hue integration."""
+        """Add remote entities to hue integration."""
         async_add_entities(new_entities)
         # Replace the default scan_interval in coordinator to 1Hz.
         if manager.coordinator.update_interval > timedelta(seconds=1):
